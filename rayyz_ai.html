@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffd329">
+<title>RAYYZ AI — Comic Intelligence</title>
+<style>
+:root{--yellow:#ffd329;--blue:#238bff;--deep:#0757bd;--ink:#101010;--paper:#fffdf5;--muted:#657080;--shadow:7px 7px 0 var(--ink)}
+*{box-sizing:border-box}body{margin:0;background:var(--yellow);color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:3px solid var(--ink);font-weight:900;border-radius:13px;box-shadow:4px 4px 0 var(--ink);transition:.15s}button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.hidden{display:none!important}.comic{border:3px solid var(--ink);border-radius:18px;box-shadow:var(--shadow)}
+#authPage{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 15% 20%,#fff58a 0 7%,transparent 7.5%),radial-gradient(circle at 85% 80%,#5db1ff 0 8%,transparent 8.5%),var(--yellow)}
+.auth-card{width:min(430px,100%);background:var(--paper);padding:27px;position:relative;overflow:hidden}
+.logo{font-size:clamp(32px,8vw,48px);font-weight:1000;letter-spacing:-3px;text-shadow:3px 3px 0 var(--yellow);margin:0}
+.tag{font-weight:800;color:var(--deep);margin:2px 0 22px}.field{display:grid;gap:6px;margin:13px 0}.field label{font-weight:900;font-size:13px}.field input,.field textarea,.field select{width:100%;padding:13px;border:3px solid var(--ink);border-radius:11px;background:white;outline:none}.field input:focus,.field textarea:focus{box-shadow:0 0 0 4px #a8d5ff}
+.primary{background:var(--blue);color:white;padding:12px 17px}.secondary{background:var(--yellow);padding:11px 15px}.auth-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.auth-actions button{flex:1}
+.small-note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:16px}
+#app{min-height:100vh;display:flex;gap:16px;padding:16px;background:linear-gradient(135deg,#ffe36b,#ffc928)}
+.sidebar{width:76px;flex:0 0 76px;background:var(--blue);padding:12px 9px;display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:width .25s,flex-basis .25s;z-index:5}
+.sidebar:hover,.sidebar:focus-within,.sidebar.expanded{width:245px;flex-basis:245px}
+.brand{font-weight:1000;color:white;font-size:17px;white-space:nowrap;padding:9px 7px;border-bottom:3px solid var(--ink)}
+.navbtn{display:flex;align-items:center;gap:13px;background:#fff;color:var(--ink);padding:12px 13px;text-align:left;white-space:nowrap;min-height:48px}
+.navbtn .ico{font-size:20px;min-width:24px;text-align:center}.navbtn .navlabel{opacity:0;transition:opacity .2s}.sidebar:hover .navlabel,.sidebar:focus-within .navlabel,.sidebar.expanded .navlabel{opacity:1}
+.side-bottom{margin-top:auto}.main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--paper);padding:12px 17px}
+.topbar h2{margin:0;font-size:clamp(18px,3vw,25px)}.user-pill{background:var(--yellow);padding:7px 12px;border:2px solid var(--ink);border-radius:30px;font-weight:900}
+.music{display:flex;align-items:center;gap:13px;background:#fff;padding:10px 15px;max-width:480px}
+.disc{width:48px;height:48px;border:4px solid var(--ink);border-radius:50%;background:repeating-radial-gradient(circle,#171717 0 2px,#555 3px 4px,#151515 5px 7px);display:grid;place-items:center;flex:none}
+.disc:after{content:"";width:13px;height:13px;background:var(--yellow);border:2px solid white;border-radius:50%}
+.disc.playing{animation:spin 3s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.music strong{display:block}.music small{color:var(--muted)}.music button{padding:7px 11px;background:var(--yellow);margin-left:auto}
+.content{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;flex:1}
+.panel{background:var(--paper);padding:18px;min-width:0}
+.chat-panel{display:flex;flex-direction:column;min-height:420px}
+.chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.chat-head h3{margin:0;font-size:22px}
+.modebar{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.mode{background:#fff;padding:8px 12px;font-size:12px}.mode.active{background:var(--blue);color:white}
+.messages{flex:1;min-height:230px;max-height:55vh;overflow:auto;padding:12px;background:#eef6ff;border:3px solid var(--ink);border-radius:14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:85%;padding:11px 13px;border:2px solid var(--ink);border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
+.msg.ai{background:white;align-self:flex-start}.msg.user{background:#ffe36b;align-self:flex-end}
+.composer{display:flex;gap:9px;margin-top:12px}.composer textarea{resize:vertical;min-height:48px;max-height:130px;flex:1;border:3px solid var(--ink);border-radius:12px;padding:12px;background:white}.composer button{background:var(--blue);color:white;padding:0 18px}
+.status{font-size:12px;color:var(--muted);margin-top:8px}
+.section-title{margin:0 0 12px}.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.info-card{background:#fff;border:2px solid var(--ink);border-radius:13px;padding:14px}.info-card b{display:block;margin-bottom:6px}
+.rules{padding-left:20px;line-height:1.65}.rules li{margin:7px 0}.warning{background:#fff1b8;border:2px solid var(--ink);border-radius:12px;padding:12px;font-size:13px;line-height:1.5}
+#toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:30;background:#238bff;color:white;border:3px solid var(--ink);border-radius:12px;padding:12px 18px;font-weight:1000;box-shadow:5px 5px 0 var(--ink);display:none}
+#toast.shake{animation:rough .45s both}@keyframes rough{0%,100%{transform:translateX(-50%)}15%{transform:translateX(calc(-50% - 9px)) rotate(-2deg)}30%{transform:translateX(calc(-50% + 9px)) rotate(2deg)}45%{transform:translateX(calc(-50% - 7px))}60%{transform:translateX(calc(-50% + 7px))}75%{transform:translateX(calc(-50% - 4px))}}
+#modalWrap{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:18px;z-index:20}
+.modal{width:min(410px,100%);background:var(--paper);padding:22px;text-align:center}.modal h3{margin:0 0 8px}.modal p{color:var(--muted);line-height:1.5}.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.modal.shake{animation:softshake .4s}@keyframes softshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+.danger{background:#ff6464;color:white;padding:11px 15px}.success{background:#a6efb2;padding:11px 15px}
+@media(max-width:650px){#app{padding:8px;gap:8px}.sidebar{width:58px;flex-basis:58px;padding:9px 5px}.sidebar:hover,.sidebar:focus-within,.sidebar.expanded{width:205px;flex-basis:205px}.topbar{padding:10px}.music{max-width:100%}.chat-panel{padding:12px}.messages{max-height:52vh}.composer{gap:6px}.composer button{padding:0 12px}}
+</style>
+</head>
+<body>
+<div id="toast" role="alert">usn atau pw salah bre</div>
+
+<section id="authPage">
+ <div class="auth-card comic">
+  <h1 class="logo">RAYYZ AI</h1><div class="tag">⚡ THINK BOLD. CREATE MORE.</div>
+  <div id="loginForm">
+   <h2>Masuk akun</h2>
+   <div class="field"><label for="loginUser">USERNAME</label><input id="loginUser" autocomplete="username" placeholder="Masukkan username"></div>
+   <div class="field"><label for="loginPass">PASSWORD</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Masukkan password"></div>
+   <label style="font-size:13px;font-weight:700"><input type="checkbox" id="remember" checked> Simpan sesi login di perangkat ini</label>
+   <div class="auth-actions"><button class="primary" id="loginBtn">LOGIN ↗</button><button class="secondary" id="showRegister">DAFTAR</button></div>
+  </div>
+  <div id="registerForm" class="hidden">
+   <h2>Buat akun baru</h2>
+   <div class="field"><label for="regUser">USERNAME</label><input id="regUser" autocomplete="username" minlength="3" maxlength="20" placeholder="3–20 karakter"></div>
+   <div class="field"><label for="regPass">PASSWORD</label><input id="regPass" type="password" autocomplete="new-password" minlength="6" placeholder="Minimal 6 karakter"></div>
+   <div class="field"><label for="regConfirm">ULANGI PASSWORD</label><input id="regConfirm" type="password" autocomplete="new-password" placeholder="Ulangi password"></div>
+   <div class="auth-actions"><button class="primary" id="registerBtn">BUAT AKUN</button><button class="secondary" id="showLogin">KEMBALI</button></div>
+  </div>
+  <p class="small-note">Demo akun disimpan pada penyimpanan browser perangkat ini. Jangan gunakan password penting atau password yang dipakai di akun lain.</p>
+ </div>
+</section>
+
+<section id="app" class="hidden">
+ <aside class="sidebar comic" id="sidebar">
+  <div class="brand">⚡ POWERED BY RAYYZ</div>
+  <button class="navbtn" data-page="chat"><span class="ico">💬</span><span class="navlabel">Chat AI</span></button>
+  <button class="navbtn" data-page="account"><span class="ico">👤</span><span class="navlabel">Informasi akun</span></button>
+  <button class="navbtn" data-page="password"><span class="ico">🔐</span><span class="navlabel">Ganti password</span></button>
+  <button class="navbtn" data-page="rules"><span class="ico">🛡️</span><span class="navlabel">Aturan keamanan</span></button>
+  <div class="side-bottom"><button class="navbtn" id="logoutBtn"><span class="ico">🚪</span><span class="navlabel">Logout akun</span></button></div>
+ </aside>
+ <main class="main">
+  <header class="topbar comic"><h2 id="pageTitle">RAYYZ AI / CHAT ROOM</h2><span class="user-pill" id="userPill">@pengguna</span></header>
+  <div class="music comic">
+   <div class="disc" id="disc"></div><div><strong>Iqro — Raim Laode</strong><small id="musicStatus">Pemutar musik • pilih file audio milikmu</small></div>
+   <input type="file" id="audioFile" accept="audio/*" hidden><button id="musicPick">♫</button>
+   <audio id="audio" preload="none"></audio>
+  </div>
+  <div class="content">
+   <section id="chatPage" class="panel comic chat-panel">
+    <div class="chat-head"><h3>💬 Ngobrol dengan AI</h3><span class="user-pill">RAYYZ • SMART MODE</span></div>
+    <div class="modebar" id="modebar">
+     <button class="mode active" data-mode="Cerdas">🧠 Cerdas</button><button class="mode" data-mode="Kreatif">🎨 Kreatif</button><button class="mode" data-mode="Belajar">📚 Belajar</button><button class="mode" data-mode="Coding">💻 Coding</button><button class="mode" data-mode="Ringkas">⚡ Ringkas</button>
+    </div>
+    <div class="messages" id="messages" aria-live="polite"><div class="msg ai">Halo! Aku RAYYZ AI. Pilih mode, lalu tulis ide atau pertanyaanmu. ✨<br><br>Catatan: chat ini masih memakai balasan demo. Sambungkan endpoint backend AI untuk jawaban AI sungguhan.</div></div>
+    <div class="composer"><textarea id="prompt" placeholder="Tulis pesanmu di sini..." rows="2"></textarea><button id="sendBtn">KIRIM ➤</button></div>
+    <div class="status" id="chatStatus">Mode aktif: Cerdas • Jangan kirim data pribadi atau password ke chat.</div>
+   </section>
+   <section id="accountPage" class="panel comic hidden">
+    <h3 class="section-title">👤 Informasi akun</h3><div class="info-grid">
+     <div class="info-card"><b>Username</b><span id="accountName">—</span></div>
+     <div class="info-card"><b>Status demo</b><span>Aktif di perangkat ini</span></div>
+     <div class="info-card"><b>Penyimpanan</b><span>Browser lokal</span></div>
+    </div>
+    <p class="warning" style="margin-top:14px">Akun versi demo hanya tersimpan di browser/perangkat ini. Belum ada sinkronisasi lintas perangkat atau sistem admin.</p>
+   </section>
+   <section id="passwordPage" class="panel comic hidden">
+    <h3 class="section-title">🔐 Ganti password</h3>
+    <div class="field"><label>Password awal</label><input id="oldPass" type="password" autocomplete="current-password" placeholder="Konfirmasi password saat ini"></div>
+    <div class="field"><label>Password baru</label><input id="newPass" type="password" autocomplete="new-password" minlength="6" placeholder="Minimal 6 karakter"></div>
+    <div class="field"><label>Ulangi password baru</label><input id="newPass2" type="password" autocomplete="new-password" placeholder="Ulangi password baru"></div>
+    <button class="primary" id="changePass">SIMPAN PASSWORD</button>
+   </section>
+   <section id="rulesPage" class="panel comic hidden">
+    <h3 class="section-title">🛡️ Aturan keamanan & kenyamanan</h3>
+    <p>Aturan ini dibuat untuk menjaga privasi, keamanan, dan kenyamanan seluruh pengguna RAYYZ AI.</p>
+    <ol class="rules">
+     <li><b>Dilarang mengirim tautan judi online (judol) atau pinjaman online (pinjol) ke AI.</b> Pelanggaran dapat menyebabkan akun dibatasi selama <b>3 hari</b>.</li>
+     <li><b>Dilarang mencoba meretas, jailbreak, atau membobol sistem AI.</b> Pelanggaran dapat menyebabkan akun diblokir permanen.</li>
+     <li><b>Dilarang memperjualbelikan atau barter akun.</b> Pelanggaran dapat menyebabkan akun diblokir permanen.</li>
+     <li><b>Dilarang mengirim atau meminta konten vulgar, pornografi, atau khusus 18+.</b> Pelanggaran dapat menyebabkan pembatasan akun selama <b>1–2 bulan</b>, sesuai peninjauan.</li>
+    </ol>
+    <div class="warning"><b>Privasi pengguna:</b> jangan membagikan password, kode OTP, alamat rumah, nomor identitas, atau informasi pribadi sensitif. Gunakan layanan dengan saling menghormati. Laporan pelanggaran sebaiknya ditinjau secara adil sebelum tindakan akun diterapkan.</div>
+    <h3 style="margin-top:20px">Butuh bantuan developer?</h3>
+    <p>Hubungi tim developer melalui WhatsApp.</p>
+    <a href="https://wa.me/6285857817756" target="_blank" rel="noopener"><button class="primary">HUBUNGI DEVELOPER ↗</button></a>
+   </section>
+  </div>
+ </main>
+</section>
+
+<div id="modalWrap" class="hidden">
+ <div class="modal comic" id="modal">
+  <h3 id="modalTitle">Konfirmasi</h3><p id="modalText">Yakin?</p>
+  <div class="modal-actions"><button class="secondary" id="modalCancel">BATAL</button><button class="danger" id="modalConfirm">YA, LANJUT</button></div>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const USERS_KEY='rayyz_demo_users_v1', SESSION_KEY='rayyz_demo_session_v1';
+let currentUser=null, currentMode='Cerdas', modalAction=null, toastTimer=null;
+function readUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'{}')}catch{return {}}}
+function saveUsers(users){localStorage.setItem(USERS_KEY,JSON.stringify(users))}
+async function hashPassword(password,salt){
+ const data=new TextEncoder().encode(password+salt);
+ const digest=await crypto.subtle.digest('SHA-256',data);
+ return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function makeSalt(){return crypto.getRandomValues(new Uint8Array(16)).join('-')}
+function toast(message='usn atau pw salah bre'){
+ const el=$('toast');el.textContent=message;el.style.display='block';el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',2300);
+}
+function showModal(title,message,confirmText,action,soft=false){
+ $('modalTitle').textContent=title;$('modalText').textContent=message;$('modalConfirm').textContent=confirmText;
+ $('modal').classList.toggle('shake',soft);$('modalWrap').classList.remove('hidden');modalAction=action;
+}
+function closeModal(){$('modalWrap').classList.add('hidden');modalAction=null}
+$('modalCancel').onclick=closeModal;
+$('modalConfirm').onclick=()=>{const action=modalAction;closeModal();if(action)action()};
+$('showRegister').onclick=()=>{$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden')};
+$('showLogin').onclick=()=>{$('registerForm').classList.add('hidden');$('loginForm').classList.remove('hidden')};
+$('registerBtn').onclick=async()=>{
+ const username=$('regUser').value.trim(),pass=$('regPass').value,confirm=$('regConfirm').value;
+ if(!/^[a-zA-Z0-9_]{3,20}$/.test(username))return toast('Username 3–20 karakter: huruf, angka, _');
+ if(pass.length<6)return toast('Password minimal 6 karakter');
+ if(pass!==confirm)return toast('Konfirmasi password tidak sama');
+ const users=readUsers(),key=username.toLowerCase();if(users[key])return toast('Username sudah digunakan bre');
+ const salt=makeSalt();users[key]={username,salt,hash:await hashPassword(pass,salt),createdAt:new Date().toISOString()};
+ saveUsers(users);toast('Akun berhasil dibuat! Silakan login.');$('regUser').value='';$('regPass').value='';$('regConfirm').value='';$('showLogin').click();
+};
+$('loginBtn').onclick=async()=>{
+ const username=$('loginUser').value.trim(),pass=$('loginPass').value,users=readUsers(),user=users[username.toLowerCase()];
+ if(!user||await hashPassword(pass,user.salt)!==user.hash)return toast();
+ currentUser=user.username;
+ if($('remember').checked)localStorage.setItem(SESSION_KEY,username.toLowerCase());else sessionStorage.setItem(SESSION_KEY,username.toLowerCase());
+ enterApp();
+};
+function enterApp(){
+ $('authPage').classList.add('hidden');$('app').classList.remove('hidden');$('userPill').textContent='@'+currentUser;$('accountName').textContent=currentUser;
+}
+function logout(){currentUser=null;localStorage.removeItem(SESSION_KEY);sessionStorage.clear();$('app').classList.add('hidden');$('authPage').classList.remove('hidden');$('loginPass').value='';}
+$('logoutBtn').onclick=()=>showModal('Yakin mau logout bre?','Sesi akun akan diakhiri pada perangkat ini.','LOGOUT',logout,true);
+document.querySelectorAll('.navbtn[data-page]').forEach(btn=>btn.addEventListener('click',()=>openPage(btn.dataset.page)));
+function openPage(page){
+ ['chat','account','password','rules'].forEach(p=>$(p+'Page').classList.toggle('hidden',p!==page));
+ const titles={chat:'RAYYZ AI / CHAT ROOM',account:'INFORMASI AKUN',password:'PENGATURAN PASSWORD',rules:'ATURAN KEAMANAN'};
+ $('pageTitle').textContent=titles[page];if(innerWidth<700)$('sidebar').classList.remove('expanded');
+}
+$('changePass').onclick=async()=>{
+ const old=$('oldPass').value,n=$('newPass').value,n2=$('newPass2').value,users=readUsers(),key=currentUser.toLowerCase(),u=users[key];
+ if(await hashPassword(old,u.salt)!==u.hash)return toast('Password awal salah bre');
+ if(n.length<6)return toast('Password baru minimal 6 karakter');
+ if(n!==n2)return toast('Password baru tidak sama');
+ const salt=makeSalt();u.salt=salt;u.hash=await hashPassword(n,salt);saveUsers(users);
+ $('oldPass').value=$('newPass').value=$('newPass2').value='';toast('Password berhasil diganti!');
+};
+document.querySelectorAll('.mode').forEach(btn=>btn.onclick=()=>{
+ document.querySelectorAll('.mode').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentMode=btn.dataset.mode;
+ $('chatStatus').textContent='Mode aktif: '+currentMode+' • Jangan kirim data pribadi atau password ke chat.';
+});
+function addMessage(text,who){const div=document.createElement('div');div.className='msg '+who;div.textContent=text;$('messages').appendChild(div);$('messages').scrollTop=$('messages').scrollHeight}
+async function sendMessage(){
+ const text=$('prompt').value.trim();if(!text)return;
+ addMessage(text,'user');$('prompt').value='';
+ // Demo guardrail only. Enforce real moderation and account sanctions on the server.
+ const lower=text.toLowerCase();
+ if(/https?:\/\/|www\./i.test(text)&&/(judol|judi|slot|pinjol|pinjaman online)/i.test(lower)){
+  addMessage('Pesan ini terdeteksi mengandung tautan yang berpotensi melanggar aturan RAYYZ AI. Pada versi demo, pesan tidak diteruskan. Sistem pembatasan akun sungguhan perlu dijalankan di server.','ai');return;
+ }
+ addMessage('Mode '+currentMode+': Pesanmu sudah diterima di tampilan demo. Untuk mendapatkan jawaban AI sungguhan, hubungkan aplikasi ke backend AI melalui endpoint aman (contoh: /api/chat). Jangan menaruh API key di file HTML.','ai');
+}
+$('sendBtn').onclick=sendMessage;
+$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
+$('musicPick').onclick=()=>$('audioFile').click();
+$('audioFile').onchange=()=>{
+ const file=$('audioFile').files[0];if(!file)return;
+ $('audio').src=URL.createObjectURL(file);$('audio').play().then(()=>{$('disc').classList.add('playing');$('musicStatus').textContent='Memutar: '+file.name}).catch(()=>toast('Audio tidak dapat diputar'));
+};
+$('audio').onplay=()=>$('disc').classList.add('playing');$('audio').onpause=()=>$('disc').classList.remove('playing');
+$('disc').onclick=()=>{if(!$('audio').src){toast('Pilih file audio yang kamu punya dulu');return}if($('audio').paused)$('audio').play();else $('audio').pause()};
+$('sidebar').addEventListener('click',e=>{if(innerWidth<700&&!e.target.closest('button'))$('sidebar').classList.toggle('expanded')});
+(async()=>{
+ const key=localStorage.getItem(SESSION_KEY)||sessionStorage.getItem(SESSION_KEY);
+ if(key){const user=readUsers()[key];if(user){currentUser=user.username;enterApp()}}
+})();
+</script>
+</body>
+</html>
